@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../static/plugins/layui.css">
+    <script src="../../static/plugins/layui.js"></script>
+    <script src="../../static/assets/layui.all.js"></script>
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+    <link rel="stylesheet" href="../../static/bootstrap.min.css">
+    <script src="../../static/plugins/vue.js"></script>
+    <script src="https://cdn.staticfile.org/axios/0.18.0/axios.min.js"></script>
+    <style>
+        h3 p{
+            width: 480px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <ul style="list-style: none;">
+        <li v-for="info in infos">
+            <h3>{{info.infoTitle}}</h3>
+            <p>&nbsp;&nbsp; {{info.infoContent}}</p>
+            <hr>
+        </li>
+    </ul>
+</div>
+
+<script>
+    const ap = new Vue({
+        el:'#app',
+        data:{
+            infos:[]
+        },
+        beforeCreate(){
+            this.$nextTick(()=>{
+                axios
+                    .get('/user/getHelpInfos')
+                    .then((res)=>{
+                        this.infos = res.data;
+                        console.log(res.data);
+                    })
+                    .catch((re)=>{
+                        console.log(re.data)
+                    })
+            })
+        }
+    })
+</script>
+</body>
+</html>

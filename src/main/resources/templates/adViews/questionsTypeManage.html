@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>问题类别管理</title>
+    <link rel="stylesheet" href="../../static/assets/css/layui.css">
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+</head>
+<body style="display: flex;justify-content: center;align-items: center;">
+<table id="test" lay-filter="test"></table>
+<script type="text/html" id="toolbarDemo">
+    <form class="layui-form" action="/admin/getUsersLike">
+        <div class="layui-form-item">
+            <div class="layui-input-block" style="margin-left: 150px;height: 250px;
+            margin-top:-38px;width: 400px;border-color: red;">
+                <input type="text" name="qtName" required  lay-verify="required" style="width: 300px;margin-top: 35px"
+                       placeholder="问题类别名称" autocomplete="off" class="layui-input">
+                <button class="layui-btn" lay-submit lay-filter="formDemo" style="margin-left: 310px;margin-top: -68px;">添加</button>
+            </div>
+        </div>
+    </form>
+</script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delQuestionsType">删除</a>
+</script>
+
+<script src="../../static/assets/layui.all.js"></script>
+<script>
+    layui.use(['layer', 'table'], function(){
+        var layer = layui.layer
+            ,table = layui.table
+            ,form = layui.form;
+        //reload 刷新
+        function  loadNews(currIndex){
+            var currNum;
+            var currCount;
+            //监听行工具事件 修改
+            table.on('edit(test)',function (obj) {
+                var data = obj.data;//修改的当行数据
+                layer.confirm('真的修改吗?', {
+                        cancel:function(index, layero){
+                            //右上角关闭回调
+                            layer.close(index);
+                            loadNews(currNum);
+                            //return false 开启该代码可禁止点击该按钮关闭
+                        }},
+                     function(index) {
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/updateQuestionsType",
+                            data: {qtid: data.qtid, qtName: data.qtName},
+                            dataType: 'json',
+                            success: function (data) {
+                                if (data) {
+                                    layer.msg('修改成功！');
+                                    layer.close(index);
+                                    loadNews(currNum);
+                                } else {
+                                    layer.msg('修改失败！');
+                                    layer.close(index);
+                                    loadNews(currNum);
+                                }
+                            }
+                        });
+                    }
+                    ,function(index) {
+                        layer.close(index);
+                        loadNews(currNum);
+                    }
+                );
+            });
+            //初始化
+            table.render({
+                elem: '#test'
+                ,id: 'test'
+                ,height: 458
+                ,width: 555
+                ,url: '/admin/getQuestionsType'
+                ,limit: 8
+                ,limits: [8, 16]
+                ,page: {curr:currIndex}
+                ,done: function (res, curr, count) {
+                    currNum = curr;    //得到当前页码
+                    currCount = count;
+                }
+                ,toolbar: '#toolbarDemo'
+                ,cols: [
+                    [
+                        {field: 'qtid', title: '问题类别编号', width:180, sort: true}
+                        ,{field: 'qtName', title: '问题类别名称', width:200,edit:'text'}
+                        ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:170}
+                    ]
+                ]
+            });
+            //监听行工具事件 删除
+            table.on('tool(test)', function(obj){
+                var data = obj.data;
+                if(obj.event === 'delQuestionsType'){
+                    layer.confirm('真的删除吗?', function(index){
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/delQuestionsType",
+                            data: {qtid: obj.data.qtid},
+                            dataType: 'json',
+                            success: function (data) {
+                                if(data){
+                                    layer.msg('删除成功！');
+                                    layer.close(index);
+                                    var couts = currNum*8;
+                                    if(currCount-1<=couts-8 && currNum != 1){
+                                        loadNews(currNum-1);
+                                    }else {
+                                        loadNews(currNum);
+                                    }
+                                }else {
+                                    layer.msg('删除失败！')
+                                    layer.close(index);
+                                    loadNews(currNum);}
+                            }
+                        });
+                    });
+                }
+            });
+            //监听提交
+            form.on('submit(formDemo)', function(data){
+                // layer.msg(JSON.stringify(data.field));
+                $.ajax({
+                    type: 'POST',
+                    url: "/admin/addQuestionType",
+                    data: {qtName: data.field.qtName},
+                    dataType: 'json',
+                    success: function (re) {
+                        if(re===1){
+                            loadNews(currNum);
+                        }else if(re == 0){
+                            layer.msg('该类型名称已存在！');
+                        }else{layer.msg('添加失败');}
+                    }
+                });
+                return false;
+            });
+        }
+       loadNews(1);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+server:
+  port: 8080
+  servlet:
+    context-path: "/"
+#####appliction configure#####
+
+#####appliction configure#####
+spring:
+  datasource:
+    name: mvc
+    url: jdbc:mysql://localhost:3306/qos?serverTimezone=UTC&characterEncoding=utf-8
+    username: root
+    password: 123456
+  mvc:
+    static-path-pattern: /static/**
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+
+
+
+#####appliction configure#####
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+#####appliction configure#####
+logging:
+  level:
+    root: info

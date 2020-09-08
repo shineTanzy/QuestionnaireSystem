@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.qos.mapper.UsersMapper">
+    <select id="regAccount" parameterType="String" resultType="com.example.qos.entity.Users">
+        select * from users where account = #{account};
+    </select>
+    <insert id="regUser" parameterType="com.example.qos.entity.Users">
+        insert into users (username, account, userpassword, regTime, sex)values
+        (#{username},#{account},#{userpassword},#{regTime},#{sex});
+    </insert>
+    <select id="getLogin" parameterType="com.example.qos.entity.Users" resultType="com.example.qos.entity.Users">
+        select * from users where account = #{account} and userpassword = #{userpassword};
+    </select>
+    <select id="getUser" parameterType="com.example.qos.entity.Users" resultType="com.example.qos.entity.Users">
+       select * from users where account = #{account};
+   </select>
+    <select id="getQuestionnaireState" resultType="com.example.qos.entity.Questionnaire">
+        select * from questionnaire where paperState = '2';
+    </select>
+    <select id="getQuestionnaireStateLimit" resultType="com.example.qos.entity.Questionnaire" parameterType="int">
+        select * from questionnaire where paperState = '2' limit #{pages},#{limits};
+    </select>
+    <select id="regMyAnswers" parameterType="com.example.qos.entity.Myanswers" resultType="com.example.qos.entity.Myanswers">
+      select maId from myanswers where qnId = #{qnId} and uId = #{uId};
+    </select>
+    <select id="getAnswers" resultType="com.example.qos.entity.Answers" parameterType="com.example.qos.entity.Questions">
+        select * from answers where quId in
+        <foreach collection="list" item="qu" index="index" open="(" separator="," close=")">
+            (#{qu.quId})
+        </foreach>
+    </select>
+    <select id="getQuestionnaire" parameterType="int" resultType="com.example.qos.entity.Questionnaire">
+        select * from questionnaire where qnId = #{qnId};
+    </select>
+    <insert id="addMyAnswers" parameterType="com.example.qos.entity.Myanswers">
+        insert into myanswers (uId, qnId, qtsName, answer, classification) values
+        <foreach collection="list" item="us" index="index" separator="," >
+        (#{us.uId}, #{us.qnId}, #{us.qtsName}, #{us.answer}, #{us.classification})
+        </foreach>;
+    </insert>
+    <select id="regPassword" resultType="com.example.qos.entity.Users">
+        select uId from users where userpassword = #{userpassword} and uId = #{uId};
+    </select>
+    <update id="updatePassword">
+        update users set userpassword = #{userpassword} where uId = #{uId};
+    </update>
+    <select id="getHelpInfos" resultType="com.example.qos.entity.Helpinfo">
+        select * from helpinfo;
+    </select>
+</mapper>

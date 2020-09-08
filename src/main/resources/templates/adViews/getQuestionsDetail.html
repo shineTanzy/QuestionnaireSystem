@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>问题管理</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="../../static/plugins/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.staticfile.org/axios/0.18.0/axios.min.js"></script>
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+    <style>
+        ol>li{
+            margin-top: 3px;
+            list-style: none;
+            margin-left: -41px;
+        }
+        .myChoices{
+            position: absolute;
+            width: 350px;
+            height: 40px;
+            border-radius:5px;
+            border-style: none;
+            outline: none;
+            border: 1px solid #DBDBDB;
+            margin-left: 50px;
+            margin-top: -35px;
+        }
+        .spanL{
+            margin-top: 30px;
+        }
+        .myAre{
+            position: absolute;
+            font-size: 23px;
+            color: red;
+            margin-left: 410px;
+            margin-top: -30px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+    </style>
+    <link rel="stylesheet" href="../../static/bootstrap.min.css">
+</head>
+<body >
+<div id="app">
+    <br>
+    <el-row>
+        <el-col :span="8" :offset="8">
+            <input  class="btn btn-large" type="button" name="Submit" onclick="javascript:history.back(-1);" value="返回上一页">
+            <div v-if="isXuanze">
+                <p style="margin-top: 13px;" >题目:</p>
+                <el-input v-model="qtsName" style="position:absolute;margin-left: 50px;margin-top: -35px;width: 350px"></el-input>
+                <ol>
+                    <li><p class="spanL">选项1：</p><input class="myChoices"></li>
+                    <li><p class="spanL">选项2：</p><input class="myChoices"></li>
+                </ol>
+            <br>
+            <el-button @click="addQuestions" style="margin-left: 240px">修改</el-button>
+            <el-button @click="addChoices" style="position:absolute;margin-left: 10px;">新增</el-button>
+            </div>
+            <div v-if="isJianda">
+                <p style="margin-top: 13px;" >题目:</p>
+                <el-input v-model="qtsName" style="position:absolute;margin-left: 50px;margin-top: -35px;width: 350px"></el-input>
+                <el-button @click="addQuestions" style="margin-left: 330px;margin-top: 10px">修改</el-button>
+            </div>
+        </el-col>
+    </el-row>
+</div>
+<br>
+<script>
+    const ap = new Vue({
+        el:'#app',
+        data:{qtName:'',qtNames:[],dicQt:[], classification:'', classifications:[],quId:'',
+            qtsName:'',recordNum:2,isJianda:false,isXuanze:false,recordnm:1,answerList:[]
+        },
+        beforeCreate(){
+            this.$nextTick(()=>{
+                axios
+                    .get('/admin/getQuestionsDetail')
+                    .then((res)=>{
+                          console.log(res.data);
+                          this.qtsName =  res.data.questions.qtsName
+                          this.quId =  res.data.questions.quId
+                          this.classification  = res.data.questions.classification;
+                        // console.log(res.data.answerList)
+                        if(this.classification != '简答题') {
+                            this.isXuanze = true;
+                            setTimeout(function () {
+                                var $li = $("ol").children("li")
+                                console.log(res.data.answersList.length)
+                                console.log(res.data.answersList[0].answer)
+                                $li.eq(0).children("input").val(res.data.answersList[0].answer)
+                                $li.eq(1).children("input").attr("value",res.data.answersList[1].answer)
+                                 for(var i=0;i<res.data.answersList.length;i++){
+                                     if(i>1){
+                                          var aa = i+1;
+                                          var lis = "<li><p class=\"spanL\">选项"+aa+"：</p>" +
+                                               "<input class=\"myChoices\" value="+res.data.answersList[i].answer+"><a class=\"myAre\">-</a> </li>"
+                                           $("ol").append(lis);
+                                     }
+                                 }
+                            },200)
+
+                        }else {
+                            this.isJianda = true;
+                        }
+                    })
+                    .catch(function (err) {
+                        console.log(err)
+                    });
+                })
+        },
+        methods:{
+            addQuestions(){//确定
+                var reSure = false;
+                if(this.classification != '简答题'){
+                    var ques_detail = new Array();
+                    var answers = [];
+                    if(this.qtsName ==''){
+                        alert("题目不能为空！");
+                    }else {
+                        var $li = $("ol").children("li");
+                        for(var i=0;i<$li.length;i++){
+                            if($li.eq(i).children("input").val()){
+                                // alert($li.eq(i).children("input").val());
+                                answers.push($li.eq(i).children("input").val());
+                                reSure = true;
+                            }else {alert("不能有空项！");}
+                        }
+                    }
+                    if(reSure){
+                        var _this = this;
+                        ques_detail.push({'quId':this.quId});
+                        ques_detail.push({'qtsName':this.qtsName});
+                        ques_detail.push({'classification':this.classification});
+                        ques_detail.push({'answers':answers});
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/updateQusAwr",
+                            data: JSON.stringify(ques_detail),
+                            contentType:"application/json",
+                            dataType: 'json',
+                            success: function (data){
+                                _this.$message({
+                                    type:'info',
+                                    message:data.reTip,
+                                    duration:1000
+                                })
+                            }
+                        });
+                    }
+                }else {
+                    var ques_detail = new Array();
+                    if(this.qtsName ==''){
+                        alert("题目不能为空！");
+                    }else
+                    {
+                        reSure = true;
+                    }
+                    if(reSure){
+                        var _this = this;
+                        ques_detail.push({'quId':this.quId});
+                        ques_detail.push({'qtsName':this.qtsName});
+                        ques_detail.push({'classification':this.classification});
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/updateQusAwr",
+                            data: JSON.stringify(ques_detail),
+                            contentType:"application/json",
+                            dataType: 'json',
+                            success: function (data){
+                                _this.$message({
+                                    type:'info',
+                                    message:data.reTip,
+                                    duration:1000
+                                })
+                            }
+                        });
+                    }
+                }
+
+            },
+            addChoices(){//新增 动态添加li
+                if(this.recordnm==1){
+                    this.getBindClick();//只调用一次
+                    this.recordnm =  this.recordnm + 1;
+                }
+                this.recordNum =  $("ol").children("li").length + 1;
+                var lis = "<li><p class=\"spanL\">选项"+this.recordNum+"：</p><input class=\"myChoices\"><a class=\"myAre\">-</a> </li>"
+                $("ol").append(lis);
+
+            },
+            getBindClick(){//li -点击删掉li
+                var _this = this;
+                $("ol").on("click","a",function () {
+                    var $cur = $(this).parent("li").nextAll("li");
+                    _this.recordNum = _this.recordNum -$cur.length;
+                    for(var i=0;i<$cur.length;i++){
+                        var aa = _this.recordNum+i
+                        $cur.eq(i).children("p").html("选项"+aa+"：");
+                    }
+                    _this.recordNum = $(this).parent("li").siblings("li").length;
+                    $(this).parent("li").remove()
+                    // alert($(this).prev("input").val());
+                })
+            }
+        },
+
+    })
+</script>
+</body>
+</html>

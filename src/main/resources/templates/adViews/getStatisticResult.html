@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>统计管理</title>
+    <link rel="stylesheet" href="../../static/assets/css/layui.css">
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+    <link rel="stylesheet" href="../../static/bootstrap.min.css">
+</head>
+<body >
+<input  class="btn btn-large" type="button" name="Submit" style="margin-left: 880px;margin-top: 10px;"
+        onclick="javascript:history.back(-1);" value="返回上一页">
+<div style="width: 950px;margin-left: 20px;">
+    <div style="margin-left: 230px;">
+        <table id="test" lay-filter="test"></table>
+    </div>
+    <div style="margin-left: 230px;">
+        <table id="test2" lay-filter="test2"></table>
+    </div>
+</div>
+
+<script src="../../static/assets/layui.all.js"></script>
+<script>
+    layui.use(['layer', 'table'], function(){
+        var layer = layui.layer
+            ,table = layui.table;
+
+        //reload 刷新
+        function  loadNews(currIndex){
+            var currNum;
+            var currCount;
+            //初始化
+            table.render({
+                elem: '#test'
+                ,id: 'test'
+                ,height: 393
+                ,width: 575
+                ,url: '/admin/getXuZeStatistic'
+                ,limit: 8
+                ,limits: [8, 16]
+                ,page: {curr:currIndex}
+                ,done: function (res, curr, count) {
+                    currNum = curr;    //得到当前页码
+                    currCount = count;
+                }
+                ,cols: [
+                    [
+                        {field: 'classification', title: '题型', width:100 ,fixed:'left'}
+                        ,{field: 'qtsName', title: '题目', width:180}
+                        ,{field: 'answer', title: '答案', width:170}
+                        ,{field: 'counts', title:'数量', width:120, sort: true}
+                    ]
+                ]
+            });
+            table.render({
+                elem: '#test2'
+                ,id: 'test2'
+                ,height: 393
+                ,width: 575
+                ,url: '/admin/getJiDaStatistic'
+                ,limit: 8
+                ,limits: [8, 16]
+                ,page: {curr:currIndex}
+                ,done: function (res, curr, count) {
+                    currNum = curr;    //得到当前页码
+                    currCount = count;
+                }
+                ,cols: [
+                    [
+                        {field: 'classification', title: '题型', width:100 ,fixed:'right' }
+                        ,{field: 'qtsName', title: '题目', width:240}
+                        ,{field: 'answer', title: '答案', width:230}
+                    ]
+                ]
+            });
+
+        }
+        loadNews(1);
+
+    });
+</script>
+</body>
+</html>

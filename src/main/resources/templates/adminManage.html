@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../static/assets/css/layui.css">
+    <link rel="stylesheet" href="../static/assets/css/admin.css">
+    <script src="../static/plugins/vue.js"></script>
+    <script src="https://cdn.staticfile.org/axios/0.18.0/axios.min.js"></script>
+    <title>后台中心</title>
+</head>
+<body class="layui-layout-body" >
+    <div class="layui-layout layui-layout-admin" id="app">
+        <div class="layui-header custom-header">
+            <ul class="layui-nav layui-layout-left">
+                <li class="layui-nav-item slide-sidebar" lay-unselect>
+                    <a href="javascript:;" class="icon-font"><i class="ai ai-menufold"></i></a>
+                </li>
+            </ul>
+
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item">
+                    <a href="javascript:;">退出</a>
+                    <dl class="layui-nav-child">
+                        <dd STYLE="cursor: pointer;"><a @click="outLog">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+
+        <div class="layui-side custom-admin">
+            <div class="layui-side-scroll">
+
+                <div class="custom-logo">
+                    <img src="../static/assets/images/logo.png" alt=""/>
+                    <h1>管理员中心</h1>
+                </div>
+                <ul id="Nav" class="layui-nav layui-nav-tree">
+                    <li class="layui-nav-item">
+                        <a href="javascript:;">
+                            <i class="layui-icon">&#xe857;</i>
+                            <em>用户管理</em>
+                        </a>
+                        <dl class="layui-nav-child">
+                            <dd>
+                                <a href="/admin/toUserManage">
+                                    <i class="layui-icon">&#xe609;</i>
+                                    <em>用户管理</em></a></dd>
+                        </dl>
+                        <dl class="layui-nav-child">
+                            <dd><a href="/admin/toAddUser">
+                                <i class="layui-icon">&#xe609;</i>
+                                <em>新增用户</em></a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item">
+                        <a href="javascript:;">
+                            <i class="layui-icon">&#xe857;</i>
+                            <em>基础信息管理</em>
+                        </a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="/admin/toQuestionsTypeManage">
+                                <i class="layui-icon">&#xe609;</i><em>问题类别管理</em></a></dd>
+                            <dd>
+                                <a href="javascript:;">
+                                    <i class="layui-icon">&#xe857;</i>
+                                    <em>问题管理</em>
+                                </a>
+                                <dl class="layui-nav-child">
+                                    <dd> <a href="/admin/toQuestionsManage">
+                                        <i class="layui-icon">&#xe609;</i><em>问题管理</em></a></dd>
+                                </dl>
+                                <dl class="layui-nav-child">
+                                    <dd><a href="/admin/toAddQuestions">
+                                        <i class="layui-icon">&#xe609;</i><em>新增问题</em></a></dd>
+                                </dl>
+                            </dd>
+                            <dd><a href="/admin/toHelpInfoManage">
+                                <i class="layui-icon">&#xe609;</i><em>帮助信息管理</em></a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item">
+                        <a href="javascript:;">
+                            <i class="layui-icon">&#xe857;</i>
+                            <em>问卷管理</em>
+                        </a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="/admin/toQuestionnaireManage">
+                                <i class="layui-icon">&#xe609;</i><em>问卷管理</em></a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item">
+                        <a href="javascript:;">
+                            <i class="layui-icon">&#xe857;</i>
+                            <em>统计管理</em>
+                        </a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="/admin/toStatisticManage">
+                                <i class="layui-icon">&#xe609;</i><em>问卷统计结果</em></a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item">
+                        <a href="javascript:;">
+                            <i class="layui-icon">&#xe857;</i>
+                            <em>系统管理</em>
+                        </a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="/admin/toUpdatePst">
+                                <i class="layui-icon">&#xe609;</i>
+                                <em>修改密码</em></a></dd>
+                        </dl>
+                    </li>
+                </ul>
+
+            </div>
+        </div>
+
+        <div class="layui-body">
+             <div class="layui-tab app-container" lay-allowClose="true" lay-filter="tabs">
+                <ul id="appTabs" class="layui-tab-title custom-tab"></ul>
+                <div id="appTabPage" class="layui-tab-content"></div>
+            </div>
+        </div>
+
+        <div class="layui-footer" style="display: flex;justify-content: center;">
+            <p>Copyright © 2019-2020 蜂鸟聚合  Tos.com All Rights Reserved. 备案号：渝ICP备15012802号-1</p>
+        </div>
+
+        <div class="mobile-mask"></div>
+    </div>
+    <script src="../static/assets/layui.js"></script>
+    <!--<script src="../static/js/myinfos.js" data-main="home"></script>-->
+    <script src="../static/js/home.js"></script>
+<script>
+    const a = new Vue({
+        el: '#app',
+        data: {},
+        methods:{
+            outLog(){
+                axios
+                    .get('/user/removeLogin')
+                    .then((res)=>{
+                        window.location.href = '/user/toUserLogin'
+                    })
+                    .catch((re)=>{
+
+                    })
+            }
+        }
+    })
+</script>
+</body>
+</html>

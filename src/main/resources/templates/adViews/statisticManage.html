@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>统计管理</title>
+    <link rel="stylesheet" href="../../static/assets/css/layui.css">
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+</head>
+<body style="display: flex;justify-content: center;">
+<table id="test" lay-filter="test" style="margin-top: 100px;"></table>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-green layui-btn-xs" lay-event="getStatisticResult">查看统计结果</a>
+</script>
+<script src="../../static/assets/layui.all.js"></script>
+<script>
+    layui.use(['layer', 'table'], function(){
+        var layer = layui.layer
+            ,table = layui.table;
+        //reload 刷新
+        function  loadNews(currIndex){
+            var currNum;
+            var currCount;
+            //初始化
+            table.render({
+                elem: '#test'
+                ,id: 'test'
+                ,height: 458
+                ,width: 575
+                ,url: '/admin/getQuestionnaireState'
+                ,limit: 8
+                // ,toolbar: '#toolbarDemo'
+                ,limits: [8, 16]
+                ,page: {curr:currIndex}
+                ,done: function (res, curr, count) {
+                    currNum = curr;    //得到当前页码
+                    currCount = count;
+                }
+                ,cols: [
+                    [
+                        {field: 'qnId', title: 'ID', width:100, sort: true}
+                        ,{field: 'paperName', title: '问卷名', width:170, sort: true}
+                        ,{field: 'createTime', title: '创建时间', width:170, sort: true}
+                        ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:130}
+                    ]
+                ]
+            });
+            //监听行工具事件 查看
+            table.on('tool(test)', function(obj){
+                var data = obj.data;
+                if(obj.event === 'getStatisticResult'){
+                    $.ajax({
+                        type: 'POST',
+                        url: "/admin/setSessionQnId",
+                        data: {qnId: obj.data.qnId},
+                        dataType: 'json',
+                        success: function (data) {
+                            window.location.href = "/admin/toGetStatisticResult";
+                        }
+                    });
+                }
+            });
+        }
+        loadNews(1);
+
+    });
+</script>
+</body>
+</html>

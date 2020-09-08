@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>问卷作答</title>
+    <link rel="stylesheet" href="../../static/assets/css/layui.css">
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+    <link rel="stylesheet" href="../../static/css/animate.css">
+    <style>
+        #mytip>a{
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body style="display: flex;height:590px;justify-content: center;align-items: center;background: #a7a7a7;opacity: 80%;">
+<div id="mytip" style="position: absolute;margin-top: -250px;margin-left:590px;">
+    <a id="helpInfo">帮助</a>
+    <a id="updatePwd">修改密码</a>
+    <a id="outLogin">退出</a>
+</div>
+<div style="width: 686px;height: 300px;background: white;">
+    <table id="test" lay-filter="test" style="margin-top: -10px;"></table>
+</div>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-green layui-btn-xs" lay-event="beginQuestionnaire">开始答卷</a>
+</script>
+
+<script src="../../static/assets/layui.all.js"></script>
+<script>
+
+    layui.use(['layer', 'table'], function(){
+        var layer = layui.layer
+            ,table = layui.table;
+        $("#outLogin").on('click',function () {
+            layer.confirm('退出登录?', function(index){
+                $.ajax({
+                    type: 'GET',
+                    url: "/user/removeLogin",
+                    dataType: 'json',
+                    success: function (data) {
+                        if(data){
+                            layer.close(index);
+                            window.location.href = "/user/toUserLogin"
+                        }
+                    }
+                });
+            });
+        });
+        $("#updatePwd").on('click',function () {
+            var html = "";
+            layer.open({
+                type: 2,
+                title: '修改密码',
+                shadeClose: true,
+                shade: 0.8,
+                area: ['380px', '90%'],
+                content: '/user/toUpdatePwd' //iframe的url
+            });
+        });
+        $("#helpInfo").on('click',function () {
+            var html = "";
+            layer.open({
+                type: 2,
+                title: '帮助信息',
+                shadeClose: true,
+                shade: 0.8,
+                area: ['480px', '90%'],
+                content: '/user/toHelpInfo' //iframe的url
+            });
+        });
+        //reload 刷新
+        function  loadNews(currIndex){
+            var currNum;
+            var currCount;
+            //初始化
+            table.render({
+                elem: '#test'
+                ,id: 'test'
+                ,height: 300
+                ,width: 686
+                ,url: '/user/getQuestionnaireState'
+                ,limit: 8
+                // ,toolbar: '#toolbarDemo'
+                ,limits: [8, 16]
+                ,page: {curr:currIndex}
+                ,done: function (res, curr, count) {
+                    currNum = curr;    //得到当前页码
+                    currCount = count;
+                }
+                ,cols: [
+                    [
+                        {field: 'paperName', title: '问卷名', width:240, sort: true}
+                        ,{field: 'startTime', title: '问卷开始时间', width:170}
+                        ,{field: 'endTime', title: '问卷结束时间', width:170}
+                        ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:100}
+                    ]
+                ]
+            });
+
+           /* $('.layui-table .layui-table-cell > span').css({'font-weight': 'bold'});//表头字体样式
+            /!*$('th').css({'background-color': '#5792c6', 'color': '#fff','font-weight':'bold'}) 表头的样式 *!/
+            $('th').hide();//表头隐藏的样式
+            $('.layui-table-page').css('margin-top','40px');//页码部分的高度调整*/
+
+            //监听行工具事件 添加 删除 发布 关闭
+            table.on('tool(test)', function(obj){
+                var data = obj.data;
+                if(obj.event === 'beginQuestionnaire'){
+                    layer.confirm('现在开始答卷吗?', function(index){
+                        $.ajax({
+                            type: 'POST',
+                            url: "/user/setSessionQnId",
+                            data: {qnId: obj.data.qnId},
+                            dataType: 'json',
+                            success: function (data) {
+                                layer.close(index);
+                                if(data.reTip != "此问卷您已做答！"){
+                                    window.location.href = "/user/toBeginQuestionnaire";
+                                }else {
+                                    layer.msg(data.reTip )
+                                    layer.close(index);
+                                    loadNews(currNum);
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+        }
+        loadNews(1);
+
+    });
+</script>
+</body>
+</html>

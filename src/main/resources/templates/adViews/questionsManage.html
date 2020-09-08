@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>问题类别管理</title>
+    <link rel="stylesheet" href="../../static/assets/css/layui.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="../../static/plugins/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.staticfile.org/axios/0.18.0/axios.min.js"></script>
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+    <style>
+        /*.selectWidth{*/
+            /*width: 150px;*/
+        /*}*/
+    </style>
+</head>
+<body >
+<div id="app">
+    <br>
+    <el-row>
+        <el-col :span="4" :offset="4">
+            <div>
+                <el-select v-model="qtName" placeholder="选择题目类别" class="selectWidth" style="width: 200px;">
+                    <el-option :value="qtName" v-for="(qtName,key) in qtNames"  :key="key"></el-option>
+                </el-select>
+            </div>
+        </el-col>
+        <el-col :span="4">
+            <div>
+                <el-select v-model="classification" placeholder="选择题型" class="selectWidth" style="position:absolute;width: 200px;margin-left: 40px;">
+                    <el-option :value="classification" v-for="(classification,key) in classifications" :key="key"></el-option>
+                </el-select>
+            </div>
+        </el-col>
+    </el-row>
+    <el-row>
+        <el-col :span="16" :offset="4">
+            <table id="test" lay-filter="test"></table>
+        </el-col>
+    </el-row>
+</div>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-green layui-btn-xs" lay-event="getQuestionsDetail">查看</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delQuestions">删除</a>
+</script>
+
+<script src="../../static/assets/layui.all.js"></script>
+<script>
+    const ap = new Vue({
+        el: '#app',
+        data: {
+            qtName: '', qtNames: [], dicQt: [], classification: '', classifications: [],
+            qtsName: '',
+        },
+        beforeCreate() {
+            this.$nextTick(() => {
+                axios
+                    .get('/admin/selectAllQuestionsType')
+                    .then((res) => {
+                        res.data.forEach((re) => {
+                            this.qtNames.push(re.qtName);
+                            this.dicQt[re.qtName] = re.qtid;
+                        })
+                    })
+                    .catch(function (err) {
+                        console.log(err)
+                    });
+            })
+        },
+        watch: {
+            qtName(qtName, oldVal) {
+                mounted :{
+                    this.classifications = ['单选题', '多选题', '简答题'];
+                }
+            },
+            classification(classification, oldVal) {
+                mounted :{
+                    console.log(classification);
+                    var _this = this;
+                    layui.use(['layer', 'table'], function(){
+                        var layer = layui.layer
+                            ,table = layui.table;
+                        console.log(_this.dicQt[_this.qtName]);
+                        //reload 刷新
+                        function  loadNews(currIndex){
+                            var currNum;
+                            var currCount;
+                            //初始化
+                            table.render({
+                                elem: '#test'
+                                ,id: 'test'
+                                ,height: 400
+                                ,width: 755
+                                ,url: '/admin/getQuestions'
+                                ,where:{qtid:_this.dicQt[_this.qtName],classification:_this.classification}
+                                ,limit: 8
+                                ,limits: [8, 16]
+                                ,page: {curr:currIndex}
+                                ,done: function (res, curr, count) {
+                                    currNum = curr;    //得到当前页码
+                                    currCount = count;
+                                }
+                                ,cols: [
+                                    [
+                                        {field: 'quId', title: '问题编号', width:180, sort: true}
+                                        ,{field: 'qtsName', title: '问题题目', width:200}
+                                        ,{field: 'classification', title: '问题题型', width:200}
+                                        ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:170}
+                                    ]
+                                ]
+                            });
+                            //监听行工具事件 删除 查看
+                            table.on('tool(test)', function(obj){
+                                var data = obj.data;
+                                if(obj.event === 'delQuestions'){
+                                    layer.confirm('真的删除吗?', function(index){
+                                        $.ajax({
+                                            type: 'POST',
+                                            url: "/admin/deleteQuestionsById",
+                                            data: {quId: obj.data.quId},
+                                            dataType: 'json',
+                                            success: function (data) {
+                                                if(data){
+                                                    layer.msg('删除成功！');
+                                                    layer.close(index);
+                                                    var couts = currNum*8;
+                                                    if(currCount-1<=couts-8 && currNum != 1){
+                                                        loadNews(currNum-1);
+                                                    }else {
+                                                        loadNews(currNum);
+                                                    }
+                                                }else {
+                                                    layer.msg('删除失败！')
+                                                    layer.close(index);
+                                                    loadNews(currNum);}
+                                            }
+                                        });
+                                    });
+                                }
+                                if(obj.event === 'getQuestionsDetail'){
+                                        $.ajax({
+                                            type: 'POST',
+                                            url: "/admin/setQuestionsDetail",
+                                            data: {quId: obj.data.quId},
+                                            dataType: 'json',
+                                            success: function (data) {
+                                               window.location.href = "/admin/toGetQuestionsDetail"
+                                            }
+                                        });
+                                }
+                            });
+                        }
+                        loadNews(1);
+                    });
+                }
+            },
+        },
+    });
+
+
+</script>
+</body>
+</html>

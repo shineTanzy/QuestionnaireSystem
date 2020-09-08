@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>问卷管理</title>
+    <link rel="stylesheet" href="../../static/assets/css/layui.css">
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+</head>
+<body >
+<form class="layui-form" action="/admin/getUsersLike">
+    <div class="layui-form-item">
+        <div class="layui-input-block" style="margin-left: 50px;height: 750px;
+            margin-top:-38px;width: 400px;border-color: red;">
+            <input type="text" name="paperName" required  lay-verify="required" style="width: 300px;margin-top: 60px;margin-left: 100px;"
+                   placeholder="问卷名" autocomplete="off" class="layui-input">
+            <input type="text" name="startTime" required id="test1" lay-verify="required" style="width: 200px;margin-top: -39px;margin-left: 430px;"
+                   placeholder="问卷开始时间" autocomplete="off" class="layui-input">
+            <input type="text" name="endTime" required id="test2" lay-verify="required" style="width: 200px;margin-top: -38px;margin-left: 650px;"
+                   placeholder="问卷结束时间" autocomplete="off" class="layui-input">
+            <button class="layui-btn" lay-submit lay-filter="formDemo"
+                    style="margin-left: 860px;margin-top: -56px;">创建</button>
+        </div>
+    </div>
+</form>
+<table id="test" lay-filter="test" style="position:relative;margin-left: 450px;margin-top: -700px;"></table>
+<script type="text/html" id="toolbarDemo">
+    <button type="button" class="layui-btn"  style="margin-left: 655px;margin-top: -5px;" id="getAllQuestionnaire">查看全部</button>
+    <form class="layui-form" action="/admin/getUsersLike">
+        <div class="layui-form-item">
+            <div class="layui-input-block" style="margin-left: 250px;height: 250px;
+            margin-top:-38px;width: 400px;border-color: red;">
+                <input type="text" name="searchVal" required  lay-verify="required" style="width: 300px;margin-top: -5px"
+                       placeholder="问卷名/时间段:2020-01-12 11:23:23" autocomplete="off" class="layui-input">
+                <button class="layui-btn" lay-submit lay-filter="formDemo2" style="margin-left: 320px;margin-top: -70px;">搜索</button>
+            </div>
+        </div>
+    </form>
+</script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-green layui-btn-xs" lay-event="addNairQuestios">添加试题</a>
+    <a class="layui-btn layui-btn-green layui-btn-xs" lay-event="issueQuestionnair">发布</a>
+    <a class="layui-btn layui-btn-green layui-btn-xs" lay-event="closeQuestionnair">关闭</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delQuestionnair">删除</a>
+</script>
+
+<script src="../../static/assets/layui.all.js"></script>
+<script>
+    layui.use(['layer', 'table'], function(){
+        var layer = layui.layer
+            ,table = layui.table
+            ,form = layui.form
+            ,laydate = layui.laydate;
+
+        laydate.render({
+            elem: '#test1'
+            ,type: 'datetime'
+            ,format: 'yyyy-MM-dd HH:mm:ss'
+        });
+        laydate.render({
+            elem: '#test2'
+            ,type: 'datetime'
+            ,format: 'yyyy-MM-dd HH:mm:ss'
+        });
+        //reload 刷新
+        function  loadNews(currIndex){
+            var currNum;
+            var currCount;
+            //初始化
+            table.render({
+                elem: '#test'
+                ,id: 'test'
+                ,height: 458
+                ,width: 1080
+                ,url: '/admin/getQuestionnaire'
+                ,limit: 8
+                ,toolbar: '#toolbarDemo'
+                ,limits: [8, 16]
+                ,page: {curr:currIndex}
+                ,done: function (res, curr, count) {
+                    currNum = curr;    //得到当前页码
+                    currCount = count;
+                }
+                ,cols: [
+                    [
+                        {field: 'qnId', title: 'ID', width:100, sort: true}
+                        ,{field: 'paperName', title: '问卷名', width:140, sort: true}
+                        ,{field: 'createTime', title: '创建时间', width:170, sort: true}
+                        ,{field: 'startTime', title: '问卷开始时间', width:170}
+                        ,{field: 'endTime', title: '问卷结束时间', width:170}
+                        ,{field: 'paperState', title: '问卷状态', width:100}
+                        ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:222}
+                    ]
+                ]
+            });
+            //监听行工具事件 添加 删除 发布 关闭
+            table.on('tool(test)', function(obj){
+                var data = obj.data;
+                if(obj.event === 'addNairQuestios'){
+                    $.ajax({
+                            type: 'POST',
+                            url: "/admin/setSessionQnId",
+                            data: {qnId: obj.data.qnId},
+                            dataType: 'json',
+                            success: function (data) {
+                                if(data){
+                                    window.location.href = "/admin/toAddQuestionsToNaire";
+                                }else {layer.msg('不能添加试题！')}
+                            }
+                        });
+                }
+                if(obj.event === 'issueQuestionnair'){
+                    layer.confirm('真的开启吗?', function(index) {
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/issueQuestionnair",
+                            data: {qnId: obj.data.qnId},
+                            dataType: 'json',
+                            success: function (data) {
+                                if (data) {
+                                    layer.msg('开启成功！');
+                                    var couts = currNum * 8;
+                                    if (currCount - 1 <= couts - 8 && currNum != 1) {
+                                        loadNews(currNum - 1);
+                                    } else {
+                                        loadNews(currNum);
+                                    }
+                                } else {
+                                    layer.msg('开启失败！')
+                                    loadNews(currNum);
+                                }
+                            }
+                        });
+                    });
+                }
+                if(obj.event === 'closeQuestionnair'){
+                    layer.confirm('真的关闭吗?', function(index) {
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/closeQuestionnair",
+                            data: {qnId: obj.data.qnId},
+                            dataType: 'json',
+                            success: function (data) {
+                                if (data) {
+                                    layer.msg('关闭成功！');
+                                    var couts = currNum * 8;
+                                    if (currCount - 1 <= couts - 8 && currNum != 1) {
+                                        loadNews(currNum - 1);
+                                    } else {
+                                        loadNews(currNum);
+                                    }
+                                } else {
+                                    layer.msg('关闭失败！')
+                                    loadNews(currNum);
+                                }
+                            }
+                        });
+                    });
+                }
+                if(obj.event === 'delQuestionnair'){
+                    layer.confirm('真的删除吗?', function(index){
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/delQuestionnair",
+                            data: {qnId: obj.data.qnId},
+                            dataType: 'json',
+                            success: function (data) {
+                                if(data){
+                                    layer.msg('删除成功！');
+                                    layer.close(index);
+                                    var couts = currNum*8;
+                                    if(currCount-1<=couts-8 && currNum != 1){
+                                        loadNews(currNum-1);
+                                    }else {
+                                        loadNews(currNum);
+                                    }
+                                }else {
+                                    layer.msg('删除失败！')
+                                    layer.close(index);
+                                    loadNews(currNum);}
+                            }
+                        });
+                    });
+                }
+            });
+            //监听提交
+            form.on('submit(formDemo)', function(data){
+                // layer.msg(JSON.stringify(data.field));
+                $.ajax({
+                    type: 'POST',
+                    url: "/admin/addQuestionnair",
+                    data: {
+                        paperName: data.field.paperName,
+                        startTime:data.field.startTime,
+                        endTime:data.field.endTime
+                    },
+                    dataType: 'json',
+                    success: function (re) {
+                        if(re){
+                            layer.msg('创建成功');
+                            loadNews(currNum);
+                        }else{layer.msg('创建失败');}
+                    }
+                });
+                return false;
+            });
+            //监听提交
+            form.on('submit(formDemo2)', function(data){
+                // layer.msg(JSON.stringify(data.field));
+                table.reload('test',{
+                    elem: '#test'
+                    ,id: 'test'
+                    ,height: 458
+                    ,width: 1080
+                    ,url: '/admin/getQuestionnaireLike'
+                    ,where:{searchVal:data.field.searchVal}
+                    ,limit: 8
+                    ,toolbar: '#toolbarDemo'
+                    ,limits: [8, 16]
+                    ,page: {curr:currIndex}
+                    ,done: function (res, curr, count) {
+                        currNum = curr;    //得到当前页码
+                        currCount = count;
+                    }
+                    ,cols: [
+                        [
+                            {field: 'qnId', title: 'ID', width:100, sort: true}
+                            ,{field: 'paperName', title: '问卷名', width:140, sort: true}
+                            ,{field: 'createTime', title: '创建时间', width:170, sort: true}
+                            ,{field: 'startTime', title: '问卷开始时间', width:170}
+                            ,{field: 'endTime', title: '问卷结束时间', width:170}
+                            ,{field: 'paperState', title: '问卷状态', width:100}
+                            ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:222}
+                        ]
+                    ]
+                });
+                return false;
+            });
+            $("body").on('click','#getAllQuestionnaire',function () {
+                table.reload('test',{
+                    elem: '#test'
+                    ,id: 'test'
+                    ,height: 458
+                    ,width: 1080
+                    ,url: '/admin/getQuestionnaire'
+                    ,limit: 8
+                    ,toolbar: '#toolbarDemo'
+                    ,limits: [8, 16]
+                    ,page: {curr:currIndex}
+                    ,done: function (res, curr, count) {
+                        currNum = curr;    //得到当前页码
+                        currCount = count;
+                    }
+                    ,cols: [
+                        [
+                            {field: 'qnId', title: 'ID', width:100, sort: true}
+                            ,{field: 'paperName', title: '问卷名', width:140, sort: true}
+                            ,{field: 'createTime', title: '创建时间', width:170, sort: true}
+                            ,{field: 'startTime', title: '问卷开始时间', width:170}
+                            ,{field: 'endTime', title: '问卷结束时间', width:170}
+                            ,{field: 'paperState', title: '问卷状态', width:100}
+                            ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:222}
+                        ]
+                    ]
+                });
+            })
+        }
+        loadNews(1);
+
+    });
+</script>
+</body>
+</html>

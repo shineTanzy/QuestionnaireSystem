@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.qos.mapper.AdminMapper">
+    <select id="selectUsersLimit" parameterType="int" resultType="com.example.qos.entity.Users">
+        select * from users  limit #{pages},#{limits};
+    </select>
+    <select id="selectUsers"  resultType="com.example.qos.entity.Users">
+        select uId from users;
+    </select>
+    <!--模糊查询用户-->
+    <select id="selectUsersLike" parameterType="String" resultType="com.example.qos.entity.Users">
+        select * from users where username like '%${searchVal}%' or regTime like '%${searchVal2}%';
+    </select>
+    <!--删除用户-->
+    <delete id="delUser" parameterType="int" >
+        delete  from  users where uId = #{uid};
+    </delete>
+    <!--修改用户-->
+    <update id="updateUserInfo" >
+        update users set username = #{username},sex = #{sex}  where uId = ${uid};
+    </update>
+    <!--新增用户-->
+    <insert id="addUser" parameterType="com.example.qos.entity.Users">
+        insert users (username,account,userpassword,regTime,sex) values (
+        #{username},#{account},#{userpassword},#{regTime},#{sex});
+    </insert>
+    <!--查询用户by account-->
+    <select id="selectUserByAccount" parameterType="com.example.qos.entity.Users" resultType="com.example.qos.entity.Users">
+      select uId from  users where account = #{account};
+    </select>
+    <!--查询问题类别-->
+    <select id="getQuestionsType" parameterType="int" resultType="com.example.qos.entity.Questionstype">
+        select * from questionstype  limit #{pages},#{limits};
+    </select>
+    <select id="getAllQuestionsType"  resultType="com.example.qos.entity.Questionstype">
+        select qtid from questionstype;
+    </select>
+    <insert id="addQuestionType" parameterType="String">
+        insert questionsType (qtName) values(#{qtName});
+    </insert>
+    <delete id="delQuestionsType" parameterType="int">
+        delete from questionstype where qtid = #{qtid};
+    </delete>
+    <update id="updateQuestionsType" >
+        update questionstype set qtName = #{qtName} where qtid = #{qtid}
+    </update>
+    <select id="selectQuestionTypeByQtName"  resultType="com.example.qos.entity.Questionstype" parameterType="String">
+        select qtid from questionstype where qtName = #{qtName};
+    </select>
+    <!--问题-->
+    <select id="selectAllQuestionsType" resultType="com.example.qos.entity.Questionstype">
+        select * from questionstype;
+    </select>
+    <insert id="addQuestions" parameterType="com.example.qos.entity.Questions">
+        insert into questions (qtid, qtsName, classification) values (#{qtid},#{qtsName},#{classification});
+    </insert>
+    <select id="selectQuSame" parameterType="com.example.qos.entity.Questions" resultType="String">
+            select quId from questions where qtid = #{qtid} and qtsName = #{qtsName} and classification = #{classification};
+    </select>
+    <select id="selectQuId" parameterType="com.example.qos.entity.Questions" resultType="String">
+            select quId from questions where qtid = #{qtid} and qtsName = #{qtsName} and classification = #{classification};
+    </select>
+    <insert id="addMuchRAnswers" parameterType="List">
+        insert into answers (quId, answer) values
+        <foreach collection="list" item="us" index="index" separator="," >
+            (#{us.quId}, #{us.answer})
+        </foreach>
+    </insert>
+    <!--问题管理-->
+    <select id="getQuestions"  resultType="com.example.qos.entity.Questions">
+        select * from questions where qtid = #{qtid} and classification = #{classification} limit #{pages},#{limits};
+    </select>
+    <select id="getAllQuestions"  resultType="com.example.qos.entity.Questions" parameterType="com.example.qos.entity.Questions">
+        select quId from questions where qtid = #{qtid} and classification = #{classification};
+    </select>
+    <delete id="deleteQuestionsById" parameterType="int">
+        delete from questions where quId = #{quId};
+    </delete>
+    <select id="getQuestionsByQuid" parameterType="int" resultType="com.example.qos.entity.Questions">
+        select * from questions where quId = #{quId};
+    </select>
+    <select id="getAnswersByQuid" parameterType="String" resultType="com.example.qos.entity.Answers">
+        select * from answers where quId = #{quId};
+    </select>
+    <update id="updateQuestionsByQuid">
+        update questions set qtsName = #{qtsName} where quId = #{quId};
+    </update>
+    <delete id="deleteAnswersByQuid" parameterType="String">
+        delete from answers where quId = #{quId};
+    </delete>
+    <!--帮助信息-->
+    <select id="getHelpInfo"  resultType="com.example.qos.entity.Helpinfo" parameterType="int">
+        select * from helpinfo  limit #{pages},#{limits};
+    </select>
+    <select id="getHelpInfos"  resultType="com.example.qos.entity.Helpinfo">
+        select * from helpinfo;
+    </select>
+    <insert id="addHelpInfo" parameterType="com.example.qos.entity.Helpinfo">
+        insert into helpinfo (infoTitle,infoContent)values (#{infoTitle},#{infoContent});
+    </insert>
+    <delete id="delHelpInfo" parameterType="int">
+        delete from  helpinfo where hId = #{hId};
+    </delete>
+    <update id="updateHelpInfo">
+        update helpinfo set infoTitle = #{infoTitle},infoContent = #{infoContent} where hId = #{hId};
+    </update>
+    <!--问卷-->
+    <insert id="addQuestionnaire" parameterType="com.example.qos.entity.Questionnaire">
+        insert into questionnaire (createTime,paperName,startTime,endTime,paperState)
+        values (#{createTime},#{paperName},#{startTime},#{endTime},#{paperState});
+    </insert>
+    <select id="getQuestionnaire" parameterType="int" resultType="com.example.qos.entity.Questionnaire">
+        select * from questionnaire limit #{pages},#{limits};
+    </select>
+    <select id="getQuestionnaires"  resultType="com.example.qos.entity.Questionnaire">
+        select qnId from questionnaire;
+    </select>
+
+    <select id="getQuestionnaireByStateLimit" parameterType="int" resultType="com.example.qos.entity.Questionnaire">
+        select * from questionnaire where paperState = '3' limit #{pages},#{limits};
+    </select>
+    <select id="getQuestionnairesState"  resultType="com.example.qos.entity.Questionnaire">
+        select qnId from questionnaire  where paperState = '3';
+    </select>
+
+    <delete id="delQuestionnair" parameterType="int">
+        delete from questionnaire where qnId = #{qnId};
+    </delete>
+    <select id="getStateByQnId" parameterType="int" resultType="String">
+        select paperState from questionnaire where qnId = #{qnId};
+    </select>
+    <update id="closeQuestionnair" parameterType="int">
+      update questionnaire set  paperState = "3" where qnId = #{qnId};
+    </update>
+    <update id="issueQuestionnair" parameterType="int">
+      update questionnaire set  paperState = "2" where qnId = #{qnId};
+    </update>
+    <select id="getQuestionnaireLike" resultType="com.example.qos.entity.Questionnaire">
+        select * from questionnaire where paperName like  '%${searchVal1}%' or
+        <![CDATA[#{searchVal2} <= endTime  and  #{searchVal3}  >= startTime]]> limit #{pages},#{limits};
+    </select>
+    <select id="getQuestionsByidcal" parameterType="com.example.qos.entity.Questions" resultType="com.example.qos.entity.Questions">
+        select * from questions where qtid = #{qtid} and classification = #{classification};
+    </select>
+    <insert id="addQusToNaire" parameterType="int">
+        insert into questionnaire_questions (qnId,quId)values (#{qnId},#{quId});
+    </insert>
+    <select id="getQuIdes" parameterType="int" resultType="com.example.qos.entity.QuestionnaireQuestions">
+        select * from questionnaire_questions where qnId = #{qnId};
+    </select>
+    <select id="getQuestionsByQuId" parameterType="com.example.qos.entity.QuestionnaireQuestions" resultType="com.example.qos.entity.Questions">
+        select * from questions where quId in
+                    <foreach collection="list" item="us" index="index" open="(" separator="," close=")" >
+                        (#{us.quId})
+                    </foreach>
+    </select>
+    <select id="getQuestionsByQuIdLimit"  resultType="com.example.qos.entity.Questions">
+        select * from questions where quId in
+        <foreach collection="questionnaireQuestions" item="us" index="index" open="(" separator="," close=")" >
+            (#{us.quId})
+        </foreach> limit #{pages},#{limits};
+    </select>
+    <delete id="deleteQQByQuId" parameterType="int">
+        delete from questionnaire_questions where quId = #{quId};
+    </delete>
+
+    <select id="getMyanswerCut" parameterType="com.example.qos.entity.Myanswers" resultType="int">
+        select count(maId) from myanswers where qnId = #{qnId} and qtsName = #{qtsName} and answer = #{answer}
+        and classification = #{classification};
+    </select>
+    <select id="getMyanswerAnswer" parameterType="com.example.qos.entity.Myanswers" resultType="String">
+        select answer from myanswers where qnId = #{qnId} and qtsName = #{qtsName} and classification = #{classification};
+    </select>
+    <insert id="insertStatistices" parameterType="List">
+        insert into statistic (qnId, qtsName, answer, counts, classification) values
+        <foreach collection="list" item="us" index="index" separator="," >
+            (#{us.qnId}, #{us.qtsName}, #{us.answer}, #{us.counts}, #{us.classification})
+        </foreach>
+    </insert>
+
+
+    <select id="getXuZeStatistic" parameterType="int" resultType="com.example.qos.entity.Statistic">
+        select * from statistic where qnId = #{qnId};
+    </select>
+    <select id="getXuZeStatisticLimit" parameterType="int" resultType="com.example.qos.entity.Statistic">
+        select * from statistic where qnId = #{qnId} limit #{pages},#{limits};
+    </select>
+    <select id="getJiDaStatistic" parameterType="int" resultType="com.example.qos.entity.Myanswers">
+        select * from myanswers where qnId = #{qnId} and classification = '简答题';
+    </select>
+    <select id="getJiDaStatisticLimit" parameterType="int" resultType="com.example.qos.entity.Myanswers">
+        select * from myanswers where qnId = #{qnId} and classification = '简答题' limit #{pages},#{limits};
+    </select>
+
+</mapper>

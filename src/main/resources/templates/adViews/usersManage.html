@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理</title>
+    <link rel="stylesheet" href="../../static/assets/css/layui.css">
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+</head>
+<body style="display: flex;justify-content: center;align-items: center;">
+<table id="test" lay-filter="test"></table>
+<script type="text/html" id="toolbarDemo">
+    <button type="button" class="layui-btn"  style="margin-left: 655px;margin-top: -5px;" id="getAllUser">查看全部</button>
+    <form class="layui-form" action="/admin/getUsersLike">
+        <div class="layui-form-item">
+            <div class="layui-input-block" style="margin-left: 250px;height: 250px;
+            margin-top:-38px;width: 400px;border-color: red;">
+                <input type="text" name="searchVal" required  lay-verify="required" style="width: 300px;margin-top: -5px"
+                       placeholder="用户名/注册时间" autocomplete="off" class="layui-input">
+                <button class="layui-btn" lay-submit lay-filter="formDemo" style="margin-left: 320px;margin-top: -70px;">搜索</button>
+            </div>
+        </div>
+    </form>
+</script>
+<script type="text/html" id="barDemo">
+    <!--<a class="layui-btn layui-btn-xs" lay-event="updateUserInfo">确认修改</a>-->
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delUser">删除</a>
+</script>
+
+<script src="../../static/assets/layui.all.js"></script>
+<script>
+    layui.use(['layer', 'table'], function(){
+        var layer = layui.layer
+            ,table = layui.table
+            ,form = layui.form;
+        function  loadNews(currIndex){
+            var currNum;
+            var currCount;
+            //修改的当行数据
+            table.on('edit(test)',function (obj) {
+                var data = obj.data;
+                layer.confirm('真的修改吗?', {
+                        cancel:function(index, layero){
+                            //右上角关闭回调
+                            layer.close(index);
+                            loadNews(currNum);
+                            //return false 开启该代码可禁止点击该按钮关闭
+                        }}
+                        , function(index){
+                            $.ajax({
+                                type: 'POST',
+                                url: "/admin/updateUserInfo",
+                                data: {uid:data.uid,
+                                    username:data.username,
+                                    sex:data.sex
+                                },
+                                dataType: 'json',
+                                success: function (data) {
+                                    if(data){
+                                        layer.msg('修改成功！')
+                                        layer.close(index);
+                                        loadNews(currNum);
+                                    }else {
+                                        layer.msg('修改失败！')
+                                        layer.close(index);
+                                        loadNews(currNum);}
+                                }
+                            });
+                        }
+                    , function(index) {
+                        layer.close(index);
+                        loadNews(currNum);
+                    });
+            });
+            //初始化
+            table.render({
+                elem: '#test'
+                ,id: 'test'
+                ,height: 450
+                ,width: 798
+                ,url: '/admin/getUsersJson'
+                ,limit: 8
+                ,limits: [8, 16]
+                ,page: {curr:currIndex}
+                ,done: function (res, curr, count) {
+                    currNum = curr;    //得到当前页码
+                    currCount = count;
+                }
+                ,toolbar: '#toolbarDemo'
+                ,cols: [
+                    [
+                        {field: 'uid', title: 'ID', width:120, sort: true}
+                        ,{field: 'account', title: '账号', width:130, sort: true}
+                        ,{field: 'username', title: '用户名', width:130,edit:'text'}
+                        ,{field: 'regTime', title: '注册时间', width:160}
+                        ,{field: 'sex', title: '性别', width: 100,edit:'text'}
+                        ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:150}
+                    ]
+                ]
+            });
+            //监听行工具事件
+            table.on('tool(test)', function(obj){
+                var data = obj.data;
+                if(obj.event === 'delUser'){
+                    layer.confirm('真的删除吗?', function(index){
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/delUser",
+                            data: {uid: obj.data.uid},
+                            dataType: 'json',
+                            success: function (data) {
+                                if(data){
+                                    layer.msg('删除成功！')
+                                    layer.close(index);
+                                    var couts = currNum*8;
+                                    if(currCount-1<=couts-8 && currNum != 1){
+                                        loadNews(currNum-1);
+                                    }else {
+                                        loadNews(currNum);
+                                    }
+                                }else {layer.msg('删除失败！')}
+                            }
+                        });
+                    });
+                }
+            });
+            //监听提交
+            form.on('submit(formDemo)', function(data){
+                // layer.msg(JSON.stringify(data.field));
+                table.reload('test',{
+                    elem: '#test'
+                    ,id: 'test'
+                    ,height: 450
+                    ,width: 798
+                    ,url: '/admin/getUsersLike'
+                    ,where:{searchVal:data.field.searchVal}
+                    ,page:false
+                    ,toolbar: '#toolbarDemo'
+                    ,cols: [
+                        [
+                            {field: 'uid', title: 'ID', width:120, sort: true}
+                            ,{field: 'account', title: '账号', width:130, sort: true}
+                            ,{field: 'username', title: '用户名', width:130,edit:'text'}
+                            ,{field: 'regTime', title: '注册时间', width:160}
+                            ,{field: 'sex', title: '性别', width: 100,edit:'text'}
+                            ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:150}
+                        ]
+                    ]
+                })
+                return false;
+            });
+            $("body").on('click','#getAllUser',function () {
+                table.reload('test',{
+                    elem: '#test'
+                    ,id: 'test'
+                    ,height: 450
+                    ,width: 798
+                    ,url: '/admin/getUsersJson'
+                    ,limit: 8
+                    ,limits: [8, 16]
+                    ,page: true
+                    ,toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板 头工具栏不得行版本低换了样式不行
+                    ,cols: [//[[之间需要隔开
+                        [
+                            {field: 'uid', title: 'ID', width:120, sort: true}
+                            ,{field: 'account', title: '账号', width:130, sort: true}
+                            ,{field: 'username', title: '用户名', width:130,edit:'text'}
+                            ,{field: 'regTime', title: '注册时间', width:160}
+                            ,{field: 'sex', title: '性别', width: 100,edit:'text'}
+                            ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:150}
+                        ]
+                    ]
+                });
+            })
+        }
+        loadNews(1);
+
+
+
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>问题管理</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="../../static/plugins/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.staticfile.org/axios/0.18.0/axios.min.js"></script>
+    <script src="../../static/plugins/jquery-3.4.0.js"></script>
+    <style>
+        ol>li{
+            margin-top: 3px;
+            list-style: none;
+            margin-left: -41px;
+        }
+        .myChoices{
+            position: absolute;
+            width: 350px;
+            height: 40px;
+            border-radius:5px;
+            border-style: none;
+            outline: none;
+            border: 1px solid #DBDBDB;
+            margin-left: 50px;
+            margin-top: -35px;
+        }
+        .spanL{
+            margin-top: 30px;
+        }
+        .myAre{
+            position: absolute;
+            font-size: 23px;
+            color: red;
+            margin-left: 410px;
+            margin-top: -30px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+    </style>
+    <link rel="stylesheet" href="../../static/bootstrap.min.css">
+</head>
+<body >
+<div id="app">
+    <br>
+    <el-row>
+        <el-col :span="4" :offset="8">
+            <div>
+                <el-select v-model="qtName" placeholder="选择题目类别" class="selectWidth">
+                    <el-option :value="qtName" v-for="(qtName,key) in qtNames"  :key="key" class="selectWidth"></el-option>
+                </el-select>
+            </div>
+        </el-col>
+        <el-col :span="4" :offset="1">
+            <div>
+                <el-select v-model="classification" placeholder="选择题型" class="selectWidth">
+                    <el-option :value="classification" v-for="(classification,key) in classifications" :key="key" class="selectWidth"></el-option>
+                </el-select>
+            </div>
+        </el-col>
+    </el-row>
+    <el-row>
+        <el-col :span="8" :offset="8">
+            <div v-if="isJianda">
+                <p style="margin-top: 13px;" >题目:</p>
+                <el-input v-model="qtsName" style="position:absolute;margin-left: 50px;margin-top: -35px;width: 350px"></el-input>
+                <ol>
+                    <li><p class="spanL">选项1：</p><input class="myChoices"></li>
+                    <li><p class="spanL">选项2：</p><input class="myChoices"></li>
+                </ol>
+            <br>
+            <el-button @click="addQuestions" style="margin-left: 240px">确定</el-button>
+            <el-button @click="addChoices" style="position:absolute;margin-left: 10px;">新增</el-button>
+            </div>
+            <div v-if="isXuanze">
+                <p style="margin-top: 13px;" >题目:</p>
+                <el-input v-model="qtsName" style="position:absolute;margin-left: 50px;margin-top: -35px;width: 350px"></el-input>
+                <el-button @click="addQuestions" style="margin-left: 330px;margin-top: 10px">确定</el-button>
+            </div>
+        </el-col>
+    </el-row>
+</div>
+<br>
+<script>
+    const ap = new Vue({
+        el:'#app',
+        data:{qtName:'',qtNames:[],dicQt:[], classification:'', classifications:[],
+            qtsName:'',recordNum:2,isJianda:false,isXuanze:false,recordnm:1,
+        },
+        beforeCreate(){
+            this.$nextTick(()=>{
+                axios
+                    .get('/admin/selectAllQuestionsType')
+                    .then((res)=>{
+                           res.data.forEach((re)=>{
+                              this.qtNames.push(re.qtName);
+                               this.dicQt[re.qtName] = re.qtid;
+                           })
+                    })
+                    .catch(function (err) {
+                        console.log(err)
+                    });
+                })
+        },
+        watch:{
+            qtName(qtName,oldVal){
+                mounted :{
+                    this.classifications = ['单选题','多选题','简答题'];
+                }
+            },
+            classification(classification,oldVal){
+                mounted :{
+                    console.log(classification);
+                    console.log(this.dicQt[this.qtName]);
+                    if(classification == '单选题' || classification == '多选题'){
+                        this.isJianda = true;
+                        this.isXuanze = false;
+                    }
+                    if(classification == '简答题'){
+                        this.isXuanze = true;
+                        this.isJianda = false;
+                        this.recordnm = 1;
+                    }
+                }
+            },
+        },
+        methods:{
+            addQuestions(){//确定
+                var reSure = false;
+                if(this.classification != '简答题'){
+                    var ques_detail = new Array();
+                    var answers = [];
+                    if(this.qtsName ==''){
+                        alert("题目不能为空！");
+                    }else {
+                        var $li = $("ol").children("li");
+                        for(var i=0;i<$li.length;i++){
+                            if($li.eq(i).children("input").val()){
+                                // alert($li.eq(i).children("input").val());
+                                answers.push($li.eq(i).children("input").val());
+                                reSure = true;
+                            }else {alert("不能有空项！");}
+                        }
+                    }
+                    if(reSure){
+                        var _this = this;
+                        var qtid = this.dicQt[this.qtName] + "";
+                        ques_detail.push({'qtid':qtid});
+                        ques_detail.push({'qtsName':this.qtsName});
+                        ques_detail.push({'classification':this.classification});
+                        ques_detail.push({'answers':answers});
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/addQusAwr",
+                            data: JSON.stringify(ques_detail),
+                            contentType:"application/json",
+                            dataType: 'json',
+                            success: function (data){
+                                _this.$message({
+                                    type:'info',
+                                    message:data.reTip,
+                                    duration:1000
+                                })
+                                setTimeout(function () {
+                                    window.location.href = "/admin/toAddQuestions";
+                                },500);
+                            }
+                        });
+                    }
+                }else {
+                    var ques_detail = new Array();
+                    var answers = [];
+                    if(this.qtsName ==''){
+                        alert("题目不能为空！");
+                    }else
+                    {
+                        reSure = true;
+                    }
+                    if(reSure){
+                        var _this = this;
+                        var qtid = this.dicQt[this.qtName] + "";
+                        ques_detail.push({'qtid':qtid});
+                        ques_detail.push({'qtsName':this.qtsName});
+                        ques_detail.push({'classification':this.classification});
+                        ques_detail.push({'answers':answers});
+                        $.ajax({
+                            type: 'POST',
+                            url: "/admin/addQusAwr",
+                            data: JSON.stringify(ques_detail),
+                            contentType:"application/json",
+                            dataType: 'json',
+                            success: function (data){
+                                _this.$message({
+                                    type:'info',
+                                    message:data.reTip,
+                                    duration:1000
+                                })
+                                setTimeout(function () {
+                                    window.location.href = "/admin/toAddQuestions";
+                                },500);
+                            }
+                        });
+                    }
+                }
+
+            },
+            addChoices(){//新增 动态添加li
+                if(this.recordnm==1){
+                    this.getBindClick();//只调用一次
+                    this.recordnm =  this.recordnm + 1;
+                }
+                this.recordNum = this.recordNum + 1;
+                var lis = "<li><p class=\"spanL\">选项"+this.recordNum+"：</p><input class=\"myChoices\"><a class=\"myAre\">-</a> </li>"
+                $("ol").append(lis);
+
+            },
+            getBindClick(){//li -点击删掉li
+                var _this = this;
+                $("ol").on("click","a",function () {
+                    var $cur = $(this).parent("li").nextAll("li");
+                    _this.recordNum = _this.recordNum -$cur.length;
+                    for(var i=0;i<$cur.length;i++){
+                        var aa = _this.recordNum+i
+                        $cur.eq(i).children("p").html("选项"+aa+"：");
+                    }
+                    _this.recordNum = $(this).parent("li").siblings("li").length;
+                    $(this).parent("li").remove()
+                    // alert($(this).prev("input").val());
+                })
+            }
+        },
+
+    })
+</script>
+</body>
+</html>
